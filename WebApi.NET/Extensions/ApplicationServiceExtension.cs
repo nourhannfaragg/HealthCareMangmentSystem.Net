@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebApi.NET.Data;
+using WebApi.NET.Data.Interceptors;
 using WebApi.NET.Helper;
 using WebApi.NET.Repositories;
 using WebApi.NET.Repository;
@@ -20,7 +21,8 @@ namespace WebApi.NET.Extensions
 
             services.AddDbContext<ApplicationContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("cs"));
+                options.UseSqlServer(configuration.GetConnectionString("cs"))
+                .AddInterceptors(new SoftDeleteInterceptor() , new ModifiedAtInterceptor() , new CreatedAtInterceptor());
             });
 
             services.AddAutoMapper(cfg =>
