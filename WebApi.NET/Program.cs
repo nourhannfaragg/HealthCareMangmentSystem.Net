@@ -21,13 +21,7 @@ namespace WebApi.NET
             builder.Services.AddAutoMapper(cfg => { },
                 typeof(DoctorProfile).Assembly);
 
-            builder.Services.AddDbContext<ApplicationContext>(options => 
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("cs"));
-            });
-
-
-
+            
             var app = builder.Build();
 
             // Swagger Middleware

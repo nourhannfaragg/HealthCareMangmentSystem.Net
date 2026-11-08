@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApi.NET.Data;
 using WebApi.NET.Dtos;
 using WebApi.NET.Models;
+using WebApi.NET.Services;
 
 namespace WebApi.NET.Controllers
 {
@@ -12,40 +13,33 @@ namespace WebApi.NET.Controllers
     [ApiController]
     public class DoctorController : ControllerBase
     {
-        private readonly ApplicationContext context;
-        private readonly IMapper mapper;
+        private readonly IDoctorService doctorService;
 
-        public DoctorController(ApplicationContext _context , IMapper _mapper)
+        public DoctorController(IDoctorService _doctorService)
         {
-            context = _context;
-            mapper = _mapper;
+            doctorService = _doctorService;
         }
 
         [HttpGet("Get-All-Doctors")]
-        public async Task<IActionResult> displayAll()
+        public async Task<IActionResult> getAllDoctors()
         {
-            var doctors = await context.Doctors
-                .Include(d => d.Appointments)
-                .AsNoTracking()
-                .ToListAsync();
-            var doctorsResponse = mapper.Map < List<Doctor> ?,List<GetDoctorResponse>>(doctors);
-            return Ok(doctorsResponse);   ///body
+            var doctors = await doctorService.GetAllAsync();
+            if (!doctors.IsSuccess)
+                return BadRequest(doctors.Error);
+
+            return Ok(doctors.Value);
         }
 
         [HttpGet("Get-By-Id/{id:int}")]
         
         public async Task<IActionResult> getById(int id)
         {
-            var doctor = await context.Doctors
-                .Include(d=> d.Appointments)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(d => d.Id == id);
-            if (doctor is null)
-                return NotFound($"Doctor With Id: {id} Is Not Found");
+            var doctor = await doctorService.GetByIdAsync(id);
 
-            var doctorResponse = mapper.Map<Doctor,GetDoctorResponse>(doctor);
+            if (!doctor.IsSuccess)
+                return BadRequest(doctor.Error);
 
-            return Ok(doctorResponse);
+            return Ok(doctor.Value);
         }
 
 
@@ -57,42 +51,41 @@ namespace WebApi.NET.Controllers
                 Name = request.Name,
                 Specialization = request.Specialization,
                 CreateAt = DateTime.Now,
-                
             };
-            await context.Doctors.AddAsync(doctor);
-            await context.SaveChangesAsync();
-            return Created();
+           var result = await doctorService.CreateAsync(doctor);
+
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
+
+            return Ok(result.Value);
         }
 
         [HttpPut] //update by id
         public async Task<IActionResult> Update(UpdateDoctorRequest request) 
         {
-            var doctor =await context.Doctors.FindAsync(request.DoctorId);
-            if (doctor is null)
-                return NotFound($"Doctor With Id={request.DoctorId} Is Not Found");
+            var doctor = new Doctor
+            {
+                Name = request.DoctorName,
+                Specialization = request.Description,
+                Appointments = request.Appointments,
+            };
 
-            doctor.Name = request.DoctorName;
-            doctor.Specialization = request.Description;
-            doctor.Appointments = request.Appointments;
-            doctor.CreateAt = DateTime.Now;
+            var result = await doctorService.UpdateAsync(doctor);
 
-            context.Doctors.Update(doctor);
-            await context.SaveChangesAsync();
+            if(!result.IsSuccess)
+                return NotFound(result.Error);
 
-            return Ok(doctor);
+            return NoContent();
         }
 
         [HttpDelete]
         public async Task<IActionResult> Remove(int id)
         {
-            var doctor = await context.Doctors.FindAsync(id);
-             
-            if(doctor is null)
-                return NotFound($"Doctor With Id{id} Is Not Found");
+            var doctor = await doctorService.DeleteAsync(id);
 
-            doctor.IsDeleted = true;    
-            context.Doctors.Update(doctor);
-            await context.SaveChangesAsync();
+            if (!doctor.IsSuccess)
+                return NotFound(doctor.Error);
+            
             return NoContent();
         }
     }

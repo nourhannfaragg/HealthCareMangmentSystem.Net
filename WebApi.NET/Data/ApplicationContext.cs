@@ -25,6 +25,8 @@ namespace WebApi.NET.Data
                                               .WithMany(a => a.Appointments)
                                               .HasForeignKey(d => d.DoctorId);
 
+            modelBuilder.Entity<Appointment>().HasQueryFilter(a => !a.IsDeleted);
+
             base.OnModelCreating(modelBuilder);
         }
     }
