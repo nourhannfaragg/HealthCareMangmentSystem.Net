@@ -1,6 +1,7 @@
-
 using Microsoft.EntityFrameworkCore;
 using WebApi.NET.Data;
+using WebApi.NET.Data.Middleware;
+using WebApi.NET.Extensions;
 using WebApi.NET.Helper;
 
 namespace WebApi.NET
@@ -13,16 +14,14 @@ namespace WebApi.NET
 
             // Add services
             builder.Services.AddControllers();
-            builder.Services.AddOpenApi();
-            // Swagger
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddServices(builder.Configuration);
 
-            builder.Services.AddAutoMapper(cfg => { },
-                typeof(DoctorProfile).Assembly);
-
-            
             var app = builder.Build();
+
+            app.UseExceptionHandler();
+            app.UseMiddleware<RequestTimingMiddleware>();
+            app.UseMiddleware<RequestIdHeaderMiddleware>();
+            app.UseMiddleware<RateLimitingMiddleware>();
 
             // Swagger Middleware
             if (app.Environment.IsDevelopment())
@@ -32,6 +31,8 @@ namespace WebApi.NET
             }
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

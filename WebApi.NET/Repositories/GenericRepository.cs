@@ -8,7 +8,7 @@ namespace WebApi.NET.Repositories
     {
         private readonly ApplicationContext _dbContext;
 
-        private GenericRepository(ApplicationContext context)=> _dbContext= context;
+        public GenericRepository(ApplicationContext context)=> _dbContext= context;
 
         public async Task<T> CreateAsync(T entity)
         {

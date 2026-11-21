@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.NET.Data;
 using WebApi.NET.Dtos;
 using WebApi.NET.Dtos.DtosPatient;
+using WebApi.NET.Filters;
 using WebApi.NET.Models;
 using WebApi.NET.Services;
 
@@ -13,6 +15,8 @@ namespace WebApi.NET.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ServiceFilter(typeof(ActionExecutionLoggingFilter))]
+    [Authorize]
     public class PatientController : ControllerBase
     {
         private readonly IPatientService patientService;
